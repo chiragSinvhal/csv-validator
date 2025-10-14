@@ -24,6 +24,7 @@ A high-performance REST API service that processes CSV files to detect and flag 
 - **📥 File Download**: Retrieve processed files with proper HTTP status codes
 - **🔒 Security**: Input validation, file type checking, and size limits
 - **📊 Monitoring**: Health checks and structured logging
+- **⚙️ Configurable Storage**: Environment-driven upload/download directory configuration
 - **🐳 Docker Ready**: Containerized deployment with Docker Compose
 
 ## 🚀 Quick Start
@@ -160,6 +161,8 @@ docker build -t csv-validator .
 # Run container
 docker run -p 8080:8080 \
   -e PORT=8080 \
+  -e UPLOAD_DIR=./uploads \
+  -e DOWNLOAD_DIR=./downloads \
   -e MAX_FILE_SIZE=10485760 \
   csv-validator
 ```
@@ -170,7 +173,8 @@ Configure via environment variables or `.env` file:
 
 ```env
 PORT=8080                    # Server port
-UPLOAD_DIR=./uploads         # File storage directory
+UPLOAD_DIR=./uploads         # Upload file storage directory
+DOWNLOAD_DIR=./downloads     # Processed file storage directory
 MAX_FILE_SIZE=10485760      # Max file size (10MB)
 LOG_LEVEL=info              # Logging level (debug, info, warn, error)
 GIN_MODE=release            # Framework mode (debug, release)
