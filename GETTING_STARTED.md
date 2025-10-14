@@ -1,103 +1,70 @@
-# CSV Validator Service
+# Getting Started
 
-> Professional Go REST API for CSV file processing with email validation
-
-[![Go Version](https://img.shields.io/badge/Go-1.21+-blue.svg)](https://golang.org)
-[![License](https://img.shie## 📚 Documentation
-
-| Document | Description |
-|----------|-------------|
-| **[Documentation Index](docs/DOCUMENTATION_INDEX.md)** | Complete documentation overview and navigation |
-| **[API Reference](docs/API_REFERENCE.md)** | Complete API documentation with examples |
-| **[Technical Overview](docs/TECHNICAL_OVERVIEW.md)** | Architecture and implementation details |
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](Dockerfile)
-
-## 🎯 Purpose
-
-A high-performance REST API service that processes CSV files to detect and flag rows containing valid email addresses.
-
-## ✨ Key Features
-
-- **📤 File Upload**: Secure CSV file upload with comprehensive validation
-- **📧 Email Detection**: Intelligent email validation using regex patterns
-- **⚡ Async Processing**: Non-blocking file processing with job status tracking
-- **📥 File Download**: Retrieve processed files with proper HTTP status codes
-- **🔒 Security**: Input validation, file type checking, and size limits
-- **📊 Monitoring**: Health checks and structured logging
-- **🐳 Docker Ready**: Containerized deployment with Docker Compose
+> Quick setup guide to run the CSV Validator Service
 
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Go 1.21 or higher
-- Git
+- Go 1.21+ installed
+- Git installed
 
-### Installation & Setup
+### 1. Clone and Setup
 ```bash
-# Clone the repository
-git clone <repository-url>
+git clone https://github.com/chiragSinvhal/csv-validator.git
 cd csv-validator
-
-# Setup environment and dependencies
-make setup
-
-# Run the service
-make run
+go mod download
 ```
 
-The API will be available at `http://localhost:8080`
-
-### Verify Installation
+### 2. Run the Service
 ```bash
-# Check health endpoint
+go run cmd/server/main.go
+```
+
+The service will start on `http://localhost:8080`
+
+### 3. Test the Service
+
+**Check if it's running:**
+```bash
 curl http://localhost:8080/health
+```
+Expected response: `{"status":"OK","timestamp":"..."}`
 
-# Run integration tests
-make integration-test
+**Upload a CSV file:**
+```bash
+curl -X POST -F "file=@sample-data/sample1.csv" http://localhost:8080/api/upload
+```
+Expected response: `{"id":"some-uuid-here"}`
+
+**Download processed file:**
+```bash
+curl http://localhost:8080/api/download/{your-job-id} -o processed.csv
 ```
 
-## 📋 Requirements
+### 4. Expected Output
 
-- Go 1.21 or higher
-- Git
+The service adds an `has_email` column to your CSV:
+- `true` - Row contains at least one valid email
+- `false` - Row contains no valid emails
 
-## 🏗️ Project Structure
-
-```
-csv-validator/
-├── cmd/server/              # Application entry point
-├── internal/                # Private application code
-│   ├── config/             # Configuration management
-│   ├── handlers/           # HTTP request handlers
-│   ├── models/             # Data models
-│   ├── services/           # Business logic
-│   └── utils/              # Utility functions
-├── pkg/logger/             # Logging package
-├── docs/                   # Documentation files
-├── scripts/                # Build and test scripts
-├── sample-data/            # Sample CSV files for testing
-└── Docker files & configs
+**Example:**
+```csv
+name,email,phone,has_email
+John,john@email.com,123-456-7890,true
+Jane,,987-654-3210,false
 ```
 
-## 🎯 API Endpoints
+## 🐳 Alternative: Using Docker
 
-### Upload CSV File
-```http
-POST /api/upload
-Content-Type: multipart/form-data
+```bash
+docker-compose up
 ```
 
-**Request:** Form field `file` (CSV file)
+## 📚 More Information
 
-**Success Response (200):**
-```json
-{
-  "id": "a225eb00-0907-4273-92ca-5faadeefae5f"
-}
-```
-
-**Error Response (400):**
-```json
+- **[Complete Documentation](docs/DOCUMENTATION_INDEX.md)** - Full project details
+- **[API Reference](docs/API_REFERENCE.md)** - Detailed API documentation
+- **[README.md](README.md)** - Complete project overview
 {
   "error": "Invalid file format. Only CSV files are allowed"
 }
