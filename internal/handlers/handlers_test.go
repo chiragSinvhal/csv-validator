@@ -33,7 +33,7 @@ func setupTestHandler(t *testing.T) (*Handler, string) {
 	}
 
 	// Initialize services
-	fileService := services.NewFileService(cfg.UploadDir)
+	fileService := services.NewFileService(cfg.UploadDir, cfg.UploadDir+"-downloads")
 	jobService := services.NewJobService()
 	csvService := services.NewCSVService(fileService, jobService)
 

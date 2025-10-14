@@ -14,18 +14,25 @@ import (
 
 // FileService handles file operations
 type FileService struct {
-	uploadDir string
+	uploadDir   string
+	downloadDir string
 }
 
 // NewFileService creates a new file service
-func NewFileService(uploadDir string) *FileService {
+func NewFileService(uploadDir, downloadDir string) *FileService {
 	// Create upload directory if it doesn't exist
 	if err := os.MkdirAll(uploadDir, 0755); err != nil {
 		panic(fmt.Sprintf("Failed to create upload directory: %v", err))
 	}
 
+	// Create download directory if it doesn't exist
+	if err := os.MkdirAll(downloadDir, 0755); err != nil {
+		panic(fmt.Sprintf("Failed to create download directory: %v", err))
+	}
+
 	return &FileService{
-		uploadDir: uploadDir,
+		uploadDir:   uploadDir,
+		downloadDir: downloadDir,
 	}
 }
 
@@ -142,4 +149,9 @@ func isTextFile(data []byte) bool {
 	// At least 95% should be printable
 	ratio := float64(printableCount) / float64(len(data))
 	return ratio >= 0.95
+}
+
+// GetDownloadDir returns the download directory path
+func (fs *FileService) GetDownloadDir() string {
+	return fs.downloadDir
 }

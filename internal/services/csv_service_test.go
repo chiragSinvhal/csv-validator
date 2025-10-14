@@ -14,7 +14,7 @@ import (
 )
 
 func TestCSVService_ProcessRecords(t *testing.T) {
-	fileService := NewFileService("./test-uploads")
+	fileService := NewFileService("./test-uploads", "./test-downloads")
 	jobService := NewJobService()
 	csvService := NewCSVService(fileService, jobService)
 
@@ -82,7 +82,7 @@ func TestCSVService_ProcessRecords(t *testing.T) {
 }
 
 func TestCSVService_IsEmptyRow(t *testing.T) {
-	fileService := NewFileService("./test-uploads")
+	fileService := NewFileService("./test-uploads", "./test-downloads")
 	jobService := NewJobService()
 	csvService := NewCSVService(fileService, jobService)
 
@@ -137,7 +137,7 @@ func TestCSVService_WriteProcessedCSV(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(tempDir)
 
-	fileService := NewFileService(tempDir)
+	fileService := NewFileService(tempDir, tempDir+"-downloads")
 	jobService := NewJobService()
 	csvService := NewCSVService(fileService, jobService)
 
@@ -176,7 +176,7 @@ func TestCSVService_ProcessFileSync_Success(t *testing.T) {
 	err = os.WriteFile(testFile, []byte(csvContent), 0644)
 	require.NoError(t, err)
 
-	fileService := NewFileService(tempDir)
+	fileService := NewFileService(tempDir, tempDir+"-downloads")
 	jobService := NewJobService()
 	csvService := NewCSVService(fileService, jobService)
 
@@ -217,7 +217,7 @@ func TestCSVService_ProcessFileSync_FileNotFound(t *testing.T) {
 	require.NoError(t, err)
 	defer os.RemoveAll(tempDir)
 
-	fileService := NewFileService(tempDir)
+	fileService := NewFileService(tempDir, tempDir+"-downloads")
 	jobService := NewJobService()
 	csvService := NewCSVService(fileService, jobService)
 
@@ -240,7 +240,7 @@ func TestCSVService_ProcessFileSync_EmptyFile(t *testing.T) {
 	err = os.WriteFile(testFile, []byte(""), 0644)
 	require.NoError(t, err)
 
-	fileService := NewFileService(tempDir)
+	fileService := NewFileService(tempDir, tempDir+"-downloads")
 	jobService := NewJobService()
 	csvService := NewCSVService(fileService, jobService)
 
@@ -264,7 +264,7 @@ func TestCSVService_ProcessFile_Async(t *testing.T) {
 	err = os.WriteFile(testFile, []byte(csvContent), 0644)
 	require.NoError(t, err)
 
-	fileService := NewFileService(tempDir)
+	fileService := NewFileService(tempDir, tempDir+"-downloads")
 	jobService := NewJobService()
 	csvService := NewCSVService(fileService, jobService)
 

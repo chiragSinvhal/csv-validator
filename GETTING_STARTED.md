@@ -22,6 +22,16 @@ go run cmd/server/main.go
 
 The service will start on `http://localhost:8080`
 
+**Optional: Configure Storage Directories**
+```bash
+# Copy and customize environment file
+cp .env.example .env
+
+# Edit .env to change storage locations:
+# UPLOAD_DIR=./custom-uploads
+# DOWNLOAD_DIR=./custom-downloads
+```
+
 ### 3. Test the Service
 
 **Check if it's running:**

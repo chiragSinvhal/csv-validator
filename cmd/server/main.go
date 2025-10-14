@@ -32,7 +32,7 @@ func main() {
 	gin.SetMode(cfg.GinMode)
 
 	// Initialize services
-	fileService := services.NewFileService(cfg.UploadDir)
+	fileService := services.NewFileService(cfg.UploadDir, cfg.DownloadDir)
 	jobService := services.NewJobService()
 	csvService := services.NewCSVService(fileService, jobService)
 

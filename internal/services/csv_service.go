@@ -76,7 +76,7 @@ func (cs *CSVService) processFileSync(jobID string) error {
 
 	// Create processed file path
 	processedFileName := fmt.Sprintf("processed_%s", filepath.Base(job.OriginalFile))
-	processedFilePath := filepath.Join(cs.fileService.uploadDir, processedFileName)
+	processedFilePath := filepath.Join(cs.fileService.GetDownloadDir(), processedFileName)
 
 	// Write processed CSV
 	if err := cs.writeProcessedCSV(processedFilePath, processedRecords); err != nil {

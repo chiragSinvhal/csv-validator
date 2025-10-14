@@ -40,8 +40,9 @@ Thumbs.db
 *.log
 logs/
 
-# Upload directory (development)
+# Upload and download directories (development)
 uploads/
+downloads/
 temp/
 
 # Coverage files

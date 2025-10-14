@@ -11,6 +11,7 @@ import (
 type Config struct {
 	Port           string
 	UploadDir      string
+	DownloadDir    string
 	MaxFileSize    int64
 	LogLevel       string
 	GinMode        string
@@ -25,6 +26,7 @@ func Load() (*Config, error) {
 	cfg := &Config{
 		Port:           getEnv("PORT", "8080"),
 		UploadDir:      getEnv("UPLOAD_DIR", "./uploads"),
+		DownloadDir:    getEnv("DOWNLOAD_DIR", "./downloads"),
 		MaxFileSize:    getEnvAsInt64("MAX_FILE_SIZE", 10*1024*1024), // 10MB default
 		LogLevel:       getEnv("LOG_LEVEL", "info"),
 		GinMode:        getEnv("GIN_MODE", "release"),
