@@ -1,0 +1,7 @@
+name,email,age,department
+Chirag Doe,Chirag.doe@company.com,30,Engineering
+Yash Smith,Yash.smith@company.com,28,Marketing
+Rohan Chiragson,Rohan.Chiragson@invalid,35,Sales
+Alice Brown,alice@example.org,32,HR
+Charlie Wilson,not-an-email,29,Finance
+Diana Davis,diana.davis@test.co.uk,31,Engineering

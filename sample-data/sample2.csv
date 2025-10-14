@@ -1,0 +1,6 @@
+product_name,contact_email,price,category
+Laptop,sales@techstore.com,999.99,Electronics
+Phone,support@phonestore.com,599.99,Electronics
+Desk,info@furniture.com,199.99,Furniture
+Chair,invalid-email-format,149.99,Furniture
+Monitor,contact@displayworld.org,299.99,Electronics
