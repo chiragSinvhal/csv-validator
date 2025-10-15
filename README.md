@@ -1,9 +1,8 @@
 # CSV Validator Service
 
-> Professional Go REST API for CSV file processing with email validation
+> Go REST API for CSV file processing with email validation
 
 [![Go Version](https://img.shields.io/badge/Go-1.21+-blue.svg)](https://golang.org)
-[![License](https://img.shie## 📚 Documentation
 
 | Document | Description |
 |----------|-------------|
