@@ -103,50 +103,48 @@ func (cs *CSVService) processRecords(records [][]string) [][]string {
 		return records
 	}
 
-	processedRecords := make([][]string, len(records))
+	result := make([][]string, len(records))
 
-	// Process header row
+	// Add header
 	if len(records) > 0 {
 		header := make([]string, len(records[0])+1)
 		copy(header, records[0])
 		header[len(header)-1] = "has_email"
-		processedRecords[0] = header
+		result[0] = header
 	}
 
-	// Process data rows
+	// Process rows
 	for i := 1; i < len(records); i++ {
-		record := records[i]
+		row := records[i]
 
-		// Skip empty rows
-		if cs.isEmptyRow(record) {
-			processedRecords[i] = record
+		// Skip if empty
+		if cs.isEmptyRow(row) {
+			result[i] = row
 			continue
 		}
 
-		// Create new record with email flag
-		newRecord := make([]string, len(record)+1)
-		copy(newRecord, record)
+		newRow := make([]string, len(row)+1)
+		copy(newRow, row)
 
-		// Check if any field contains a valid email
-		hasEmail := false
-		for _, field := range record {
+		// Check for emails
+		foundEmail := false
+		for _, field := range row {
 			if utils.IsValidEmail(strings.TrimSpace(field)) {
-				hasEmail = true
+				foundEmail = true
 				break
 			}
 		}
 
-		// Add email flag
-		if hasEmail {
-			newRecord[len(newRecord)-1] = "true"
+		if foundEmail {
+			newRow[len(newRow)-1] = "true"
 		} else {
-			newRecord[len(newRecord)-1] = "false"
+			newRow[len(newRow)-1] = "false"
 		}
 
-		processedRecords[i] = newRecord
+		result[i] = newRow
 	}
 
-	return processedRecords
+	return result
 }
 
 // isEmptyRow checks if a CSV row is empty or contains only whitespace

@@ -1,206 +1,46 @@
 {
   "info": {
-    "name": "CSV Validator Service",
-    "description": "REST API for CSV file processing with email validation",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    "name": "CSV Validator",
+    "description": "API for CSV processing"
   },
   "item": [
     {
       "name": "Health Check",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Status code is 200\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Response has status OK\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.status).to.eql(\"OK\");",
-              "});",
-              "",
-              "pm.test(\"Response has timestamp\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.timestamp).to.exist;",
-              "});"
-            ]
-          }
-        }
-      ],
       "request": {
         "method": "GET",
         "header": [],
         "url": {
-          "raw": "{{base_url}}/health",
-          "host": ["{{base_url}}"],
-          "path": ["health"]
-        },
-        "description": "Check if the service is running and healthy"
+          "raw": "{{base_url}}/health"
+        }
       }
     },
     {
-      "name": "Upload CSV File",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Status code is 200\", function () {",
-              "    pm.response.to.have.status(200);",
-              "});",
-              "",
-              "pm.test(\"Response has job ID\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.id).to.exist;",
-              "    pm.expect(jsonData.id).to.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);",
-              "    pm.environment.set(\"job_id\", jsonData.id);",
-              "});",
-              "",
-              "pm.test(\"Job ID is valid UUID format\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.id).to.have.lengthOf(36);",
-              "});"
-            ]
-          }
-        }
-      ],
+      "name": "Upload CSV",
       "request": {
         "method": "POST",
-        "header": [],
         "body": {
           "mode": "formdata",
           "formdata": [
             {
               "key": "file",
-              "description": "CSV file to upload and process",
               "type": "file",
               "src": []
             }
           ]
         },
         "url": {
-          "raw": "{{base_url}}/api/upload",
-          "host": ["{{base_url}}"],
-          "path": ["api", "upload"]
-        },
-        "description": "Upload a CSV file for processing. The file will be processed asynchronously and a job ID will be returned."
+          "raw": "{{base_url}}/api/upload"
+        }
       }
     },
     {
-      "name": "Upload Invalid File (Error Test)",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Status code is 400\", function () {",
-              "    pm.response.to.have.status(400);",
-              "});",
-              "",
-              "pm.test(\"Response has error message\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.error).to.exist;",
-              "});"
-            ]
-          }
-        }
-      ],
-      "request": {
-        "method": "POST",
-        "header": [],
-        "body": {
-          "mode": "formdata",
-          "formdata": [
-            {
-              "key": "file",
-              "description": "Non-CSV file to test error handling",
-              "type": "file",
-              "src": []
-            }
-          ]
-        },
-        "url": {
-          "raw": "{{base_url}}/api/upload",
-          "host": ["{{base_url}}"],
-          "path": ["api", "upload"]
-        },
-        "description": "Test error handling by uploading a non-CSV file"
-      }
-    },
-    {
-      "name": "Download Processed File",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Status code is 200 or 423\", function () {",
-              "    pm.expect(pm.response.code).to.be.oneOf([200, 423]);",
-              "});",
-              "",
-              "if (pm.response.code === 200) {",
-              "    pm.test(\"Response is CSV content\", function () {",
-              "        pm.expect(pm.response.headers.get('Content-Type')).to.include('text/csv');",
-              "    });",
-              "} else if (pm.response.code === 423) {",
-              "    pm.test(\"Job still processing\", function () {",
-              "        var jsonData = pm.response.json();",
-              "        pm.expect(jsonData.error).to.include('processing');",
-              "    });",
-              "}"
-            ]
-          }
-        }
-      ],
+      "name": "Download File",
       "request": {
         "method": "GET",
-        "header": [],
         "url": {
-          "raw": "{{base_url}}/api/download/{{job_id}}",
-          "host": ["{{base_url}}"],
-          "path": ["api", "download", "{{job_id}}"]
-        },
-        "description": "Download the processed CSV file using the job ID from upload"
-      }
-    },
-    {
-      "name": "Download with Invalid Job ID",
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "exec": [
-              "pm.test(\"Status code is 400\", function () {",
-              "    pm.response.to.have.status(400);",
-              "});",
-              "",
-              "pm.test(\"Response has error message\", function () {",
-              "    var jsonData = pm.response.json();",
-              "    pm.expect(jsonData.error).to.exist;",
-              "});"
-            ]
-          }
+          "raw": "{{base_url}}/api/download/{{job_id}}"
         }
-      ],
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/api/download/invalid-job-id",
-          "host": ["{{base_url}}"],
-          "path": ["api", "download", "invalid-job-id"]
-        },
-        "description": "Test error handling with an invalid job ID"
       }
-    }
-  ],
-  "variable": [
-    {
-      "key": "base_url",
-      "value": "http://localhost:8080",
-      "type": "string"
     }
   ]
 }
