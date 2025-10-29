@@ -1,65 +1,21 @@
 # CSV Validator Service
 
-> Go REST API for CSV file processing with email validation
+A REST API service for CSV file processing with email validation functionality.
 
-[![Go Version](https://img.shields.io/badge/Go-1.21+-blue.svg)](https://golang.org)
+## Overview
 
-| Document | Description |
-|----------|-------------|
-| **[Documentation Index](docs/DOCUMENTATION_INDEX.md)** | Complete documentation overview and navigation |
-| **[API Reference](docs/API_REFERENCE.md)** | Complete API documentation with examples |
-| **[Technical Overview](docs/TECHNICAL_OVERVIEW.md)** | Architecture and implementation details |
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](Dockerfile)
+This service processes CSV files to detect and flag rows containing valid email addresses. It provides a simple HTTP API for uploading CSV files and downloading processed results.
 
-## 🎯 Purpose
+## Features
 
-A high-performance REST API service that processes CSV files to detect and flag rows containing valid email addresses.
-
-## ✨ Key Features
-
-- **📤 File Upload**: Secure CSV file upload with comprehensive validation
-- **📧 Email Detection**: Intelligent email validation using regex patterns
-- **⚡ Async Processing**: Non-blocking file processing with job status tracking
-- **📥 File Download**: Retrieve processed files with proper HTTP status codes
-- **🔒 Security**: Input validation, file type checking, and size limits
-- **📊 Monitoring**: Health checks and structured logging
-- **⚙️ Configurable Storage**: Environment-driven upload/download directory configuration
-- **🐳 Docker Ready**: Containerized deployment with Docker Compose
-
-## 🚀 Quick Start
-
-### Prerequisites
-- Go 1.21 or higher
-- Git
-
-### Installation & Setup
-```bash
-# Clone the repository
-git clone <repository-url>
-cd csv-validator
-
-# Setup environment and dependencies
-make setup
-
-# Run the service
-make run
-```
-
-The API will be available at `http://localhost:8080`
-
-### Verify Installation
-```bash
-# Check health endpoint
-curl http://localhost:8080/health
-
-# Run integration tests
-make integration-test
-```
-
-## 📋 Requirements
-
-- Go 1.21 or higher
-- Git
+- CSV file upload with validation
+- Email detection and flagging
+- Asynchronous file processing
+- Job status tracking
+- File download with proper HTTP status codes
+- Input validation and security checks
+- Health monitoring endpoint
+- Docker support
 
 ## 🏗️ Project Structure
 
@@ -79,189 +35,143 @@ csv-validator/
 └── Docker files & configs
 ```
 
-## 🎯 API Endpoints
+## Quick Start
 
-### Upload CSV File
-```http
-POST /api/upload
-Content-Type: multipart/form-data
+### Requirements
+- Go 1.21 or higher
+
+### Installation
+```bash
+git clone <repository-url>
+cd csv-validator
+go mod download
 ```
 
-**Request:** Form field `file` (CSV file)
+### Running the Service
+```bash
+go run .
+```
 
-**Success Response (200):**
+The service runs on `http://localhost:8080` by default.
+
+### Basic Usage
+```bash
+# Check if service is running
+curl http://localhost:8080/health
+
+# Upload a CSV file
+curl -X POST -F "file=@sample.csv" http://localhost:8080/api/upload
+
+# Download processed file (replace {job-id} with actual ID from upload response)
+curl http://localhost:8080/api/download/{job-id} -o processed.csv
+```
+
+## API Documentation
+
+### Upload Endpoint
+**POST /api/upload**
+
+Upload a CSV file for processing.
+
+Request:
+- Content-Type: multipart/form-data
+- Field: `file` (CSV file, max 10MB)
+
+Response:
 ```json
 {
-  "id": "a225eb00-0907-4273-92ca-5faadeefae5f"
+  "id": "uuid-job-id"
 }
 ```
 
-**Error Response (400):**
-```json
-{
-  "error": "Invalid file format. Only CSV files are allowed"
-}
-```
+### Download Endpoint
+**GET /api/download/{id}**
 
-### Download Processed File
-```http
-GET /api/download/{job-id}
-```
+Download the processed CSV file.
 
-**Response Scenarios:**
-- `200 OK`: Processed CSV file ready for download
-- `423 Locked`: Job still processing
-- `400 Bad Request`: Invalid job ID
-- `404 Not Found`: File not found
+Responses:
+- 200: File ready for download
+- 423: Processing still in progress
+- 400: Invalid job ID
+- 404: File not found
 
 ### Health Check
-```http
-GET /health
+**GET /health**
+
+Check service status.
+
+## Configuration
+
+Set environment variables or create a `.env` file:
+
+```env
+PORT=8080
+UPLOAD_DIR=./uploads
+DOWNLOAD_DIR=./downloads
+MAX_FILE_SIZE=10485760
+LOG_LEVEL=info
+GIN_MODE=release
 ```
 
-Returns service health status.
-
-## 🧪 Testing
+## Docker
 
 ```bash
-# Run unit tests
-make test
+# Build and run
+docker build -t csv-validator .
+docker run -p 8080:8080 csv-validator
 
-# Run tests with coverage
-make coverage
-
-# Run integration tests
-make integration-test
-
-# Run all checks (format, lint, test)
-make check
-```
-
-## 🐳 Docker Deployment
-
-### Quick Docker Run
-```bash
-# Build and run with Docker
-make docker-build
-make docker-run
-```
-
-### Docker Compose (Recommended)
-```bash
-# Run with Docker Compose (includes nginx proxy)
+# Or use docker-compose
 docker-compose up
 ```
 
-### Manual Docker Commands
+## Development
+
 ```bash
-# Build image
-docker build -t csv-validator .
+# Run tests
+go test ./...
 
-# Run container
-docker run -p 8080:8080 \
-  -e PORT=8080 \
-  -e UPLOAD_DIR=./uploads \
-  -e DOWNLOAD_DIR=./downloads \
-  -e MAX_FILE_SIZE=10485760 \
-  csv-validator
-```
-
-## ⚙️ Configuration
-
-Configure via environment variables or `.env` file:
-
-```env
-PORT=8080                    # Server port
-UPLOAD_DIR=./uploads         # Upload file storage directory
-DOWNLOAD_DIR=./downloads     # Processed file storage directory
-MAX_FILE_SIZE=10485760      # Max file size (10MB)
-LOG_LEVEL=info              # Logging level (debug, info, warn, error)
-GIN_MODE=release            # Framework mode (debug, release)
-```
-
-## 🔧 Development
-
-### Development Commands
-```bash
-# Setup development environment
-make setup
+# Run with coverage
+go test -cover ./...
 
 # Format code
-make fmt
+go fmt ./...
 
-# Run linters
-make lint
-
-# Run go vet
-make vet
-
-# Install development tools
-make install-tools
+# Build
+go build -o csv-validator .
 ```
 
-### Email Validation
-The service validates email addresses using regex pattern:
-```regex
-^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
-```
+## How It Works
 
-### CSV Processing Example
+The service adds a `has_email` column to uploaded CSV files:
+- `true` if the row contains at least one valid email address
+- `false` if no valid email addresses are found
 
-**Input CSV:**
+Example:
 ```csv
-name,email,age
-Chirag,Chirag@example.com,30
-Yash,invalid-email,25
-Rohan,Rohan@test.org,35
+# Input
+name,email,phone
+John,john@example.com,123-456-7890
+Jane,,987-654-3210
+
+# Output
+name,email,phone,has_email
+John,john@example.com,123-456-7890,true
+Jane,,987-654-3210,false
 ```
 
-**Output CSV:**
-```csv
-name,email,age,has_email
-Chirag,Chirag@example.com,30,true
-Yash,invalid-email,25,false
-Rohan,Rohan@test.org,35,true
-```
+## Error Handling
 
-## � Documentation
-
-| Document | Description |
-|----------|-------------|
-| **[API Reference](docs/API_REFERENCE.md)** | Complete API documentation with examples |
-| **[Technical Overview](docs/TECHNICAL_OVERVIEW.md)** | Architecture and implementation details |
-
-## 🛡️ Security Features
-
-- **File Validation**: CSV format and size limits
-- **Input Sanitization**: Filename and content validation
-- **Path Protection**: Prevention of path traversal attacks
-- **Content Validation**: MIME type and text file verification
-
-## �📈 Performance Features
-
-- **Async Processing**: Non-blocking file operations
-- **Memory Efficient**: Streaming CSV parsing
-- **Concurrent Safe**: Thread-safe job management
-- **Resource Limits**: Configurable size and timeout limits
-
-## � Monitoring & Logging
-
-- **Structured Logging**: JSON format with configurable levels
-- **Health Checks**: Service status monitoring
-- **Request Tracking**: Request/response logging
-- **Error Tracking**: Comprehensive error handling
-
-## 🚨 Error Handling
-
-### HTTP Status Codes
-- `200 OK`: Successful request
-- `400 Bad Request`: Invalid input (file format, job ID)
-- `413 Payload Too Large`: File size exceeds limit
-- `423 Locked`: Job still in progress
-- `500 Internal Server Error`: Server processing error
-
-### Common Errors
-- Invalid file format (only CSV accepted)
+Common error responses:
+- Invalid file format (non-CSV files)
 - File size exceeds 10MB limit
-- Malformed job ID format
-- Empty or corrupted files
+- Invalid job ID format
+- Processing failures
+
+## Testing
+
+Sample CSV files are provided in the `sample-data/` directory for testing.
+
+For automated testing, run the integration test script:
+```bash
+./scripts/integration-tests.sh
+```

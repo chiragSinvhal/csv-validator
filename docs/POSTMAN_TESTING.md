@@ -78,4 +78,4 @@ Bob,invalid-email,555-0123,false
 | Empty file | Empty `.csv` | 400 error |
 | Large file | 10MB+ CSV | Success (async processing) |
 
-This collection includes **automated tests** that validate responses, making it perfect for demonstrating reliability to technical reviewers! 🎯
+This collection includes **automated tests** that validate responses, making it perfect for demonstrating reliability to technical reviewers!

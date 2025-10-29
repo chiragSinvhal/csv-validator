@@ -1,19 +1,19 @@
-# CSV Validator API Documentation
+# API Reference
+
+Complete API documentation for the CSV Validator Service.
 
 ## Base URL
 ```
 http://localhost:8080
 ```
 
-## Authentication
-No authentication required for this API.
-
 ## Endpoints
 
 ### Health Check
 
-#### GET /health
-Check if the service is running.
+**GET /health**
+
+Check service health status.
 
 **Response:**
 ```json
@@ -24,244 +24,197 @@ Check if the service is running.
 
 ### File Upload
 
-#### POST /api/upload
+**POST /api/upload**
+
 Upload a CSV file for email validation processing.
 
 **Request:**
-- Method: `POST`
-- Content-Type: `multipart/form-data`
+- Method: POST
+- Content-Type: multipart/form-data
 - Body: Form data with file field named `file`
 
 **Parameters:**
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| file | File | Yes | CSV file to process (max 10MB) |
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| file | File | Yes | CSV file (max 10MB) |
 
-**Response (Success - 200 OK):**
+**Success Response (200):**
 ```json
 {
   "id": "a225eb00-0907-4273-92ca-5faadeefae5f"
 }
 ```
 
-**Response (Error - 400 Bad Request):**
+**Error Responses:**
+
+400 Bad Request:
 ```json
 {
   "error": "Invalid file format. Only CSV files are allowed"
 }
 ```
 
-**Response (Error - 413 Payload Too Large):**
+413 Payload Too Large:
 ```json
 {
-  "error": "File size (15728640 bytes) exceeds maximum allowed size (10485760 bytes)"
+  "error": "File size exceeds maximum allowed size"
 }
 ```
 
-**Response (Error - 500 Internal Server Error):**
-```json
-{
-  "error": "Failed to save uploaded file"
-}
-```
-
-**Example using curl:**
+**Example:**
 ```bash
 curl -X POST \
   http://localhost:8080/api/upload \
-  -H 'Content-Type: multipart/form-data' \
   -F 'file=@sample.csv'
 ```
 
 ### File Download
 
-#### GET /api/download/{id}
+**GET /api/download/{id}**
+
 Download the processed CSV file.
 
-**Request:**
-- Method: `GET`
-- Path Parameter: `id` (UUID of the processing job)
+**Parameters:**
+| Name | Type | Required | Description |
+|------|------|----------|-------------|
+| id | string | Yes | Job ID from upload response |
 
-**Response (Success - 200 OK):**
-- Content-Type: `text/csv`
-- Content-Disposition: `attachment; filename=processed_filename.csv`
-- Body: Processed CSV file with email validation flags
+**Success Response (200):**
+- Content-Type: text/csv
+- Body: Processed CSV file with has_email column
 
-**Response (Job In Progress - 423 Locked):**
+**Error Responses:**
+
+423 Locked (Processing):
 ```json
 {
   "error": "Job is still in progress"
 }
 ```
 
-**Response (Invalid ID - 400 Bad Request):**
+400 Bad Request:
 ```json
 {
   "error": "Invalid job ID format"
 }
 ```
 
-**Response (Job Not Found - 400 Bad Request):**
-```json
-{
-  "error": "Invalid job ID"
-}
-```
-
-**Response (Job Failed - 500 Internal Server Error):**
-```json
-{
-  "error": "Job processing failed: {failure reason}"
-}
-```
-
-**Response (File Not Found - 404 Not Found):**
+404 Not Found:
 ```json
 {
   "error": "Processed file not found"
 }
 ```
 
-**Example using curl:**
+**Example:**
 ```bash
 curl -X GET \
   http://localhost:8080/api/download/a225eb00-0907-4273-92ca-5faadeefae5f \
   -o processed_file.csv
 ```
 
-## CSV Processing Details
+## Processing Details
 
 ### Email Validation
-The service validates email addresses using the following regex pattern:
+
+The service validates emails using this pattern:
 ```
 ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
 ```
 
 ### Output Format
-For each row in the input CSV (excluding the header), a new column `has_email` is added:
-- `true`: The row contains at least one valid email address
-- `false`: The row does not contain any valid email addresses
+
+A new column `has_email` is added to each row:
+- `true`: Row contains at least one valid email
+- `false`: No valid emails found
 
 ### Example
 
-**Input CSV:**
+Input:
 ```csv
 name,email,age
-Chirag,Chirag@example.com,30
-Yash,invalid-email,25
-Rohan,Rohan@test.org,35
+John,john@example.com,30
+Jane,invalid-email,25
 ```
 
-**Output CSV:**
+Output:
 ```csv
 name,email,age,has_email
-Chirag,Chirag@example.com,30,true
-Yash,invalid-email,25,false
-Rohan,Rohan@test.org,35,true
+John,john@example.com,30,true
+Jane,invalid-email,25,false
 ```
 
 ## Error Handling
 
-### HTTP Status Codes
-- `200 OK`: Successful request
-- `400 Bad Request`: Invalid request (bad file format, invalid job ID, etc.)
-- `413 Payload Too Large`: File size exceeds maximum limit
-- `423 Locked`: Job is still in progress (for download requests)
-- `404 Not Found`: Processed file not found
-- `500 Internal Server Error`: Server error during processing
+### Status Codes
+- 200: Success
+- 400: Bad request
+- 413: File too large
+- 423: Processing in progress
+- 404: Not found
+- 500: Server error
 
 ### File Validation
-- Only `.csv` files are accepted
-- Maximum file size: 10MB (configurable)
-- Files must contain valid text content
-- Empty files are rejected
+- Only .csv files accepted
+- Maximum 10MB file size
+- Must contain valid text content
+- Empty files rejected
 
-## Rate Limiting
-Currently, no rate limiting is implemented. In production, consider implementing rate limiting based on your requirements.
+## Complete Workflow Example
 
-## CORS
-CORS is enabled for all origins (`*`). In production, configure appropriate CORS policies.
-
-## Examples
-
-### Complete Workflow
-
-1. **Upload a file:**
+1. Upload file:
 ```bash
-curl -X POST \
-  http://localhost:8080/api/upload \
-  -H 'Content-Type: multipart/form-data' \
-  -F 'file=@sample.csv'
+curl -X POST -F 'file=@data.csv' http://localhost:8080/api/upload
 ```
 
 Response:
 ```json
-{
-  "id": "a225eb00-0907-4273-92ca-5faadeefae5f"
-}
+{"id": "job-uuid-here"}
 ```
 
-2. **Check if processing is complete:**
+2. Check status:
 ```bash
-curl -X GET \
-  http://localhost:8080/api/download/a225eb00-0907-4273-92ca-5faadeefae5f
+curl http://localhost:8080/api/download/job-uuid-here
 ```
 
-If still processing (423 response):
-```json
-{
-  "error": "Job is still in progress"
-}
-```
+If still processing, you'll get HTTP 423.
 
-3. **Download processed file when ready:**
+3. Download when ready:
 ```bash
-curl -X GET \
-  http://localhost:8080/api/download/a225eb00-0907-4273-92ca-5faadeefae5f \
-  -o processed_sample.csv
+curl http://localhost:8080/api/download/job-uuid-here -o result.csv
 ```
 
-### Using JavaScript/Fetch API
+## JavaScript Example
 
 ```javascript
-// Upload file
-const formData = new FormData();
-formData.append('file', fileInput.files[0]);
-
-fetch('http://localhost:8080/api/upload', {
-    method: 'POST',
-    body: formData
-})
-.then(response => response.json())
-.then(data => {
-    const jobId = data.id;
-    // Poll for completion
-    checkJobStatus(jobId);
-});
-
-// Check job status and download when ready
-function checkJobStatus(jobId) {
-    fetch(`http://localhost:8080/api/download/${jobId}`)
-    .then(response => {
-        if (response.status === 200) {
-            // File ready, download it
-            return response.blob();
-        } else if (response.status === 423) {
-            // Still processing, check again later
-            setTimeout(() => checkJobStatus(jobId), 1000);
-        } else {
-            throw new Error('Job failed or invalid');
-        }
-    })
-    .then(blob => {
-        if (blob) {
-            // Create download link
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'processed_file.csv';
-            a.click();
-        }
+async function processCSV(file) {
+    // Upload
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const uploadResponse = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData
     });
+    
+    const { id } = await uploadResponse.json();
+    
+    // Poll for completion
+    while (true) {
+        const downloadResponse = await fetch(`/api/download/${id}`);
+        
+        if (downloadResponse.status === 200) {
+            // Ready - download file
+            const blob = await downloadResponse.blob();
+            // Handle download
+            break;
+        } else if (downloadResponse.status === 423) {
+            // Still processing - wait and retry
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        } else {
+            // Error
+            throw new Error('Processing failed');
+        }
+    }
 }
 ```

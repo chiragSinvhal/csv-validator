@@ -1,241 +1,69 @@
-# Getting Started
+# Getting Started Guide
 
-> Quick setup guide to run the CSV Validator Service
+Quick setup instructions for the CSV Validator Service.
 
-## 🚀 Quick Start
+## Prerequisites
 
-### Prerequisites
-- Go 1.21+ installed
-- Git installed
+- Go 1.21 or later installed
+- Basic familiarity with REST APIs
 
-### 1. Clone and Setup
+## Setup
+
+1. **Clone the repository**
 ```bash
-git clone https://github.com/chiragSinvhal/csv-validator.git
+git clone <repository-url>
 cd csv-validator
+```
+
+2. **Install dependencies**
+```bash
 go mod download
 ```
 
-### 2. Run the Service
+3. **Run the service**
 ```bash
-go run cmd/server/main.go
+go run .
 ```
 
-The service will start on `http://localhost:8080`
+The service will start on port 8080.
 
-**Optional: Configure Storage Directories**
-```bash
-# Copy and customize environment file
-cp .env.example .env
+## First Test
 
-# Edit .env to change storage locations:
-# UPLOAD_DIR=./custom-uploads
-# DOWNLOAD_DIR=./custom-downloads
-```
-
-### 3. Test the Service
-
-**Check if it's running:**
+1. **Check if the service is running**
 ```bash
 curl http://localhost:8080/health
 ```
-Expected response: `{"status":"OK","timestamp":"..."}`
 
-**Upload a CSV file:**
+Expected response: `{"status":"healthy"}`
+
+2. **Upload a test file**
 ```bash
 curl -X POST -F "file=@sample-data/sample1.csv" http://localhost:8080/api/upload
 ```
-Expected response: `{"id":"some-uuid-here"}`
 
-**Download processed file:**
+You'll get a response with a job ID.
+
+3. **Download the processed file**
 ```bash
-curl http://localhost:8080/api/download/{your-job-id} -o processed.csv
+curl http://localhost:8080/api/download/YOUR_JOB_ID -o processed.csv
 ```
 
-### 4. Expected Output
+## What Happens
 
-The service adds an `has_email` column to your CSV:
-- `true` - Row contains at least one valid email
-- `false` - Row contains no valid emails
+The service processes your CSV file and adds a new column called `has_email` that indicates whether each row contains a valid email address.
 
-**Example:**
-```csv
-name,email,phone,has_email
-John,john@email.com,123-456-7890,true
-Jane,,987-654-3210,false
-```
+## Docker Alternative
 
-## 🐳 Alternative: Using Docker
+If you prefer using Docker:
 
 ```bash
 docker-compose up
 ```
 
-## 📚 More Information
+This will start the service with all dependencies configured.
 
-- **[Complete Documentation](docs/DOCUMENTATION_INDEX.md)** - Full project details
-- **[API Reference](docs/API_REFERENCE.md)** - Detailed API documentation
-- **[README.md](README.md)** - Complete project overview
-{
-  "error": "Invalid file format. Only CSV files are allowed"
-}
-```
+## Next Steps
 
-### Download Processed File
-```http
-GET /api/download/{job-id}
-```
-
-**Response Scenarios:**
-- `200 OK`: Processed CSV file ready for download
-- `423 Locked`: Job still processing
-- `400 Bad Request`: Invalid job ID
-- `404 Not Found`: File not found
-
-### Health Check
-```http
-GET /health
-```
-
-Returns service health status.
-
-## 🧪 Testing
-
-```bash
-# Run unit tests
-make test
-
-# Run tests with coverage
-make coverage
-
-# Run integration tests
-make integration-test
-
-# Run all checks (format, lint, test)
-make check
-```
-
-## 🐳 Docker Deployment
-
-### Quick Docker Run
-```bash
-# Build and run with Docker
-make docker-build
-make docker-run
-```
-
-### Docker Compose (Recommended)
-```bash
-# Run with Docker Compose (includes nginx proxy)
-docker-compose up
-```
-
-### Manual Docker Commands
-```bash
-# Build image
-docker build -t csv-validator .
-
-# Run container
-docker run -p 8080:8080 \
-  -e PORT=8080 \
-  -e MAX_FILE_SIZE=10485760 \
-  csv-validator
-```
-
-## ⚙️ Configuration
-
-Configure via environment variables or `.env` file:
-
-```env
-PORT=8080                    # Server port
-UPLOAD_DIR=./uploads         # File storage directory
-MAX_FILE_SIZE=10485760      # Max file size (10MB)
-LOG_LEVEL=info              # Logging level (debug, info, warn, error)
-GIN_MODE=release            # Framework mode (debug, release)
-```
-
-## 🔧 Development
-
-### Development Commands
-```bash
-# Setup development environment
-make setup
-
-# Format code
-make fmt
-
-# Run linters
-make lint
-
-# Run go vet
-make vet
-
-# Install development tools
-make install-tools
-```
-
-### Email Validation
-The service validates email addresses using regex pattern:
-```regex
-^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
-```
-
-### CSV Processing Example
-
-**Input CSV:**
-```csv
-name,email,age
-Chirag,Chirag@example.com,30
-Yash,invalid-email,25
-Rohan,Rohan@test.org,35
-```
-
-**Output CSV:**
-```csv
-name,email,age,has_email
-Chirag,Chirag@example.com,30,true
-Yash,invalid-email,25,false
-Rohan,Rohan@test.org,35,true
-```
-
-## � Documentation
-
-| Document | Description |
-|----------|-------------|
-| **[API Reference](docs/API_REFERENCE.md)** | Complete API documentation with examples |
-| **[Technical Overview](docs/TECHNICAL_OVERVIEW.md)** | Architecture and implementation details |
-
-## 🛡️ Security Features
-
-- **File Validation**: CSV format and size limits
-- **Input Sanitization**: Filename and content validation
-- **Path Protection**: Prevention of path traversal attacks
-- **Content Validation**: MIME type and text file verification
-
-## �📈 Performance Features
-
-- **Async Processing**: Non-blocking file operations
-- **Memory Efficient**: Streaming CSV parsing
-- **Concurrent Safe**: Thread-safe job management
-- **Resource Limits**: Configurable size and timeout limits
-
-## � Monitoring & Logging
-
-- **Structured Logging**: JSON format with configurable levels
-- **Health Checks**: Service status monitoring
-- **Request Tracking**: Request/response logging
-- **Error Tracking**: Comprehensive error handling
-
-## 🚨 Error Handling
-
-### HTTP Status Codes
-- `200 OK`: Successful request
-- `400 Bad Request`: Invalid input (file format, job ID)
-- `413 Payload Too Large`: File size exceeds limit
-- `423 Locked`: Job still in progress
-- `500 Internal Server Error`: Server processing error
-
-### Common Errors
-- Invalid file format (only CSV accepted)
-- File size exceeds 10MB limit
-- Malformed job ID format
-- Empty or corrupted files
+- Check the API documentation for detailed endpoint information
+- Look at the sample CSV files in `sample-data/` for examples
+- Review the configuration options in `.env.example`

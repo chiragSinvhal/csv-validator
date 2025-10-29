@@ -1,197 +1,100 @@
-# CSV Validator Project Summary
+# Technical Overview
 
-## 📋 Project Overview
-Go REST API service for CSV file processing with email validation.
+## Project Summary
 
-## ✅ Requirements Fulfilled
+A Go-based REST API service for processing CSV files with email validation.
 
-### Core Functionality
-- ✅ **POST /api/upload** - CSV file upload with unique job ID response
-- ✅ **GET /api/download/{id}** - File download with proper status handling
-- ✅ **Email Validation** - Regex-based email detection with boolean flag column
-- ✅ **File Storage** - Filesystem-based storage for uploaded and processed files
-- ✅ **In-Memory Job Management** - Job status tracking and metadata storage
+## Architecture
 
-### HTTP Status Codes
-- ✅ **200 OK** - Successful upload and download
-- ✅ **400 Bad Request** - Invalid file format, job ID, etc.
-- ✅ **413 Payload Too Large** - File size limit enforcement
-- ✅ **423 Locked** - Job in progress status (as required)
-- ✅ **500 Internal Server Error** - Proper error handling
+### Core Components
 
+**Services Layer**
+- FileService: Handles file storage and validation
+- JobService: Manages job lifecycle and status
+- CSVService: Processes CSV files and adds email validation
 
-### Additional Professional Features
-- ✅ **.env Configuration** - Environment-based configuration
-- ✅ **Structured Logging** - logging with levels
-- ✅ **Docker Support** - Containerization with multi-stage build
-- ✅ **API Documentation** - Detailed API specification
-- ✅ **Makefile** - Development workflow automation
-- ✅ **Health Checks** - Service health monitoring
-- ✅ **CORS Support** - Cross-origin request handling
-- ✅ **Graceful Shutdown** - Proper server lifecycle management
+**HTTP Layer**
+- Handlers: Process HTTP requests and responses
+- Middleware: CORS, logging, error handling
 
-## 🏗️ Architecture
+**Configuration**
+- Environment-based configuration
+- File storage directory management
 
-### Project Structure
-```
-csv-validator/
-├── cmd/server/          # Application entry point
-├── internal/
-│   ├── config/          # Configuration management
-│   ├── handlers/        # HTTP request handlers
-│   ├── models/          # Data models and types
-│   ├── services/        # Business logic layer
-│   └── utils/           # Utility functions
-├── pkg/logger/          # Logging package
-├── test-samples/        # Sample CSV files for testing
-├── uploads/             # File storage directory
-├── API.md              # API documentation
-├── docker-compose.yml  # Container orchestration
-├── Dockerfile          # Container configuration
-├── Makefile           # Build automation
-└── test-api.sh        # API testing script
+### Key Design Decisions
+
+**Asynchronous Processing**
+File processing happens in background goroutines to avoid blocking HTTP requests.
+
+**In-Memory Job Storage**
+Jobs are stored in memory with mutex protection for thread safety. This works well for single-instance deployments.
+
+**File System Storage**
+Uploaded and processed files are stored on the local filesystem with unique naming to prevent conflicts.
+
+## Email Validation
+
+Uses regex pattern matching to identify valid email addresses:
+```regex
+^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
 ```
 
-### Service Layer Architecture
-- **FileService** - File operations and validation
-- **JobService** - Job lifecycle management with thread-safe operations
-- **CSVService** - CSV processing with email validation logic
-- **Handler** - HTTP request/response handling with comprehensive error management
+## Security Measures
 
-### Key Design Patterns
-- **Dependency Injection** - Clean service dependencies
-- **Repository Pattern** - Abstract data storage
-- **Command Pattern** - Async job processing
-- **Factory Pattern** - Service initialization
-
-## 🛡️ Security & Validation
-
-### File Security
 - File type validation (CSV only)
-- File size limits (configurable)
-- Content validation (text file detection)
-- Path traversal protection
-- Filename sanitization
+- File size limits (configurable, default 10MB)
+- Input sanitization for filenames
+- UUID-based job IDs to prevent enumeration
+- Content validation to ensure text files
 
-### Input Validation
-- UUID format validation for job IDs
-- Email regex validation with strict mode
-- Request parameter validation
-- MIME type checking
+## Error Handling
 
-## 🧪 Testing
+The service uses proper HTTP status codes:
+- 200: Success
+- 400: Bad request (invalid input)
+- 413: File too large
+- 423: Job still processing
+- 500: Server error
 
-### Test Coverage
-- **Unit Tests** - All services and utilities
-- **Handler Tests** - HTTP endpoint testing
-- **Integration Tests** - End-to-end workflows
-- **Error Case Testing** - Comprehensive error scenarios
+## Configuration
 
-### Test Categories
-- Email validation edge cases
-- File validation scenarios  
-- Job lifecycle management
-- HTTP status code verification
-- Async processing validation
+Environment variables control:
+- Server port
+- Upload/download directories
+- File size limits
+- Logging levels
+- Framework mode
 
-## 🚀 Deployment
+## Testing Strategy
 
-### Development
-```bash
-# Setup
-make setup
+- Unit tests for all services
+- Integration tests for HTTP endpoints
+- End-to-end API testing script
+- File validation test cases
 
-# Run
-go run .
+## Deployment
 
-# Test
-make test
-```
+**Development**: Direct Go execution
+**Production**: Docker containers with optional nginx proxy
 
-### Production
-```bash
-# Docker
-make docker-build
-make docker-run
+## Performance Considerations
 
-# Or with compose
-docker-compose up
-```
+- Streaming CSV parsing for memory efficiency
+- Concurrent job processing
+- Configurable timeouts and limits
+- Graceful shutdown handling
 
-## 📊 Performance Considerations
+## Monitoring
 
-- **Async Processing** - Non-blocking file processing
-- **Memory Efficiency** - Streaming CSV parsing
-- **Concurrent Safety** - Thread-safe job management
-- **Resource Limits** - Configurable file size limits
+- Health check endpoint
+- Structured logging
+- Request/response tracking
+- Error tracking and reporting
 
-## 🔧 Configuration
+## Future Enhancements
 
-Environment variables for flexible deployment:
-- `PORT` - Server port
-- `UPLOAD_DIR` - File storage location
-- `MAX_FILE_SIZE` - File size limit
-- `LOG_LEVEL` - Logging verbosity
-- `GIN_MODE` - Framework mode
-
-## 📝 API Features
-
-### Upload Endpoint
-- Multipart file upload
-- Comprehensive validation
-- Immediate job ID response
-- Error details for failures
-
-### Download Endpoint  
-- Job status checking
-- File streaming response
-- Proper HTTP status codes
-- Progress tracking
-
-## 🎯 Development Best Practices
-
-### Code Quality
-- Clean Architecture principles
-- SOLID design principles
-- Comprehensive error handling
-- Professional documentation
-
-### DevOps
-- Docker containerization
-- Environment configuration
-- Health check endpoints
-- Graceful shutdown
-
-### Testing
-- High test coverage
-- Mock-free testing
-- Integration test scenarios
-- Performance considerations
-
-## 📈 Scalability Considerations
-
-### Current Design
-- In-memory job storage (suitable for single instance)
-- Filesystem storage (suitable for development/small scale)
-
-### Future Enhancements
-- Database job persistence
+For production scale, consider:
+- Database-backed job storage
 - Distributed file storage
-- Message queue processing
+- Message queue for processing
 - Horizontal scaling support
-
-## 🔍 Monitoring & Observability
-
-- Structured JSON logging
-- Request/response logging
-- Error tracking
-- Performance metrics
-- Health check endpoints
-
-## 🛠️ Development Tools
-
-- **Makefile** - Build automation
-- **Docker** - Containerization
-- **golangci-lint** - Code quality
-- **Test Coverage** - Quality metrics
-- **API Testing** - Automated validation

@@ -23,7 +23,3 @@
 ### For Project Stakeholders
 1. Review **[../GETTING_STARTED.md](../GETTING_STARTED.md)** for project overview and status
 2. Check **[TECHNICAL_OVERVIEW.md](TECHNICAL_OVERVIEW.md)** for implementation summary
-
----
-
-*All documentation is maintained in Markdown format for better readability and version control.*

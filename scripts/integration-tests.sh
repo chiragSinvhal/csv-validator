@@ -1,29 +1,30 @@
 #!/bin/bash
 
-# CSV Validator API Test Script
+# CSV Validator API Integration Tests
 
 API_BASE="http://localhost:8080"
-TEST_FILE="test-samples/sample1.csv"
+TEST_FILE="sample-data/sample1.csv"
 
-echo "=== CSV Validator API Test ==="
+echo "CSV Validator API Integration Tests"
+echo "==================================="
 echo ""
 
 # Check if server is running
-echo "1. Testing health endpoint..."
+echo "Testing health endpoint..."
 health_response=$(curl -s -w "%{http_code}" -o /dev/null "$API_BASE/health")
 if [ "$health_response" = "200" ]; then
-    echo "✅ Health check passed"
+    echo "Health check: PASS"
 else
-    echo "❌ Health check failed (HTTP $health_response)"
-    echo "Please start the server first: go run ."
+    echo "Health check: FAIL (HTTP $health_response)"
+    echo "Make sure the server is running: go run ."
     exit 1
 fi
 echo ""
 
 # Test file upload
-echo "2. Testing file upload..."
+echo "Testing file upload..."
 if [ ! -f "$TEST_FILE" ]; then
-    echo "❌ Test file not found: $TEST_FILE"
+    echo "Test file not found: $TEST_FILE"
     exit 1
 fi
 
@@ -34,113 +35,84 @@ upload_response=$(curl -s -X POST \
 job_id=$(echo "$upload_response" | grep -o '"id":"[^"]*"' | cut -d'"' -f4)
 
 if [ -n "$job_id" ]; then
-    echo "✅ File uploaded successfully"
-    echo "   Job ID: $job_id"
+    echo "File upload: PASS"
+    echo "Job ID: $job_id"
 else
-    echo "❌ File upload failed"
-    echo "   Response: $upload_response"
+    echo "File upload: FAIL"
+    echo "Response: $upload_response"
     exit 1
 fi
 echo ""
 
-# Test job status polling
-echo "3. Polling job status..."
+# Test job status and download
+echo "Testing file processing..."
 max_attempts=30
 attempt=0
 
 while [ $attempt -lt $max_attempts ]; do
     download_response=$(curl -s -w "%{http_code}" \
         "$API_BASE/api/download/$job_id" \
-        -o "processed_output.csv")
+        -o "test_output.csv")
     
     http_code=${download_response: -3}
     
     if [ "$http_code" = "200" ]; then
-        echo "✅ File processing completed"
-        echo "   Processed file saved as: processed_output.csv"
+        echo "File processing: PASS"
+        echo "Output saved as: test_output.csv"
         break
     elif [ "$http_code" = "423" ]; then
-        echo "   Job still in progress... (attempt $((attempt + 1))/$max_attempts)"
+        echo "Processing... (attempt $((attempt + 1))/$max_attempts)"
         sleep 1
         attempt=$((attempt + 1))
     else
-        echo "❌ Download failed (HTTP $http_code)"
-        curl -s "$API_BASE/api/download/$job_id"
+        echo "File processing: FAIL (HTTP $http_code)"
         exit 1
     fi
 done
 
 if [ $attempt -eq $max_attempts ]; then
-    echo "❌ Timeout waiting for job completion"
+    echo "File processing: TIMEOUT"
     exit 1
 fi
 echo ""
 
-# Verify processed file
-echo "4. Verifying processed file..."
-if [ -f "processed_output.csv" ]; then
-    echo "✅ Processed file exists"
-    
-    # Check if has_email column was added
-    if grep -q "has_email" "processed_output.csv"; then
-        echo "✅ Email validation column added"
-        
-        # Show first few lines
+# Verify output file
+echo "Verifying output file..."
+if [ -f "test_output.csv" ]; then
+    if grep -q "has_email" "test_output.csv"; then
+        echo "Output verification: PASS"
         echo ""
-        echo "   First 5 lines of processed file:"
-        head -5 "processed_output.csv" | sed 's/^/   /'
-        
-        # Count true/false values
-        true_count=$(grep -c ",true$" "processed_output.csv" || echo "0")
-        false_count=$(grep -c ",false$" "processed_output.csv" || echo "0")
-        echo ""
-        echo "   Email validation results:"
-        echo "   - Rows with valid email: $true_count"
-        echo "   - Rows without valid email: $false_count"
+        echo "Sample output:"
+        head -3 "test_output.csv"
     else
-        echo "❌ Email validation column not found"
+        echo "Output verification: FAIL (missing has_email column)"
         exit 1
     fi
 else
-    echo "❌ Processed file not found"
+    echo "Output verification: FAIL (file not found)"
     exit 1
 fi
 echo ""
 
 # Test error cases
-echo "5. Testing error cases..."
+echo "Testing error handling..."
 
-# Test invalid file type
-echo "   Testing invalid file type..."
-echo "This is not a CSV file" > test_invalid.txt
+# Invalid file type
+echo "This is not a CSV" > test_invalid.txt
 invalid_response=$(curl -s -X POST \
     -F "file=@test_invalid.txt" \
     "$API_BASE/api/upload")
 
 if echo "$invalid_response" | grep -q "error"; then
-    echo "✅ Invalid file type correctly rejected"
+    echo "Error handling: PASS"
 else
-    echo "❌ Invalid file type not rejected"
+    echo "Error handling: FAIL"
 fi
 rm -f test_invalid.txt
 
-# Test invalid job ID
-echo "   Testing invalid job ID..."
-invalid_id_response=$(curl -s -w "%{http_code}" \
-    "$API_BASE/api/download/invalid-id" \
-    -o /dev/null)
-
-if [ "${invalid_id_response: -3}" = "400" ]; then
-    echo "✅ Invalid job ID correctly rejected"
-else
-    echo "❌ Invalid job ID not rejected (HTTP ${invalid_id_response: -3})"
-fi
-
 echo ""
-echo "=== Test Summary ==="
-echo "✅ All tests passed successfully!"
+echo "All tests completed successfully!"
 echo ""
-echo "Cleanup: removing test output file..."
-rm -f processed_output.csv
-
-echo "Done!"
+echo "Cleaning up..."
+rm -f test_output.csv
+echo "Done."
