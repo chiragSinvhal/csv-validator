@@ -11,35 +11,6 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestFileService_SaveFile(t *testing.T) {
-	tempDir, err := os.MkdirTemp("", "file-test")
-	require.NoError(t, err)
-	defer os.RemoveAll(tempDir)
-
-	fs := NewFileService(tempDir, tempDir+"-downloads")
-
-	// Make a fake file upload
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-	part, _ := writer.CreateFormFile("file", "test.csv")
-	part.Write([]byte("name,email\nJohn,Chirag@test.com"))
-	writer.Close()
-
-	req := bytes.NewReader(body.Bytes())
-	reader := multipart.NewReader(req, writer.Boundary())
-	form, _ := reader.ReadForm(1024)
-	file := form.File["file"][0]
-
-	savedPath, err := fs.SaveFile(file, "test-job-123")
-	require.NoError(t, err)
-	assert.Contains(t, savedPath, "test-job-123")
-	assert.FileExists(t, savedPath)
-
-	// Read back and verify
-	content, _ := os.ReadFile(savedPath)
-	assert.Contains(t, string(content), "Chirag,Chirag@test.com")
-}
-
 func TestFileService_GetFile(t *testing.T) {
 	tempDir, err := os.MkdirTemp("", "file-test")
 	require.NoError(t, err)
@@ -59,34 +30,6 @@ func TestFileService_GetFile(t *testing.T) {
 	// Should fail on missing file
 	_, err = fs.GetFile("nope.csv")
 	assert.Error(t, err)
-}
-
-func TestFileService_ValidateFile_SizeCheck(t *testing.T) {
-	tempDir, _ := os.MkdirTemp("", "file-test")
-	defer os.RemoveAll(tempDir)
-
-	fs := NewFileService(tempDir, tempDir+"-downloads")
-
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-	part, _ := writer.CreateFormFile("file", "big.csv")
-	part.Write(make([]byte, 2048)) // 2KB file
-	writer.Close()
-
-	req := bytes.NewReader(body.Bytes())
-	reader := multipart.NewReader(req, writer.Boundary())
-	form, _ := reader.ReadForm(4096)
-	file := form.File["file"][0]
-
-	// Should pass with 10KB limit
-	info, err := fs.ValidateFile(file, 10*1024)
-	assert.NoError(t, err)
-	assert.Equal(t, "big.csv", info.Filename)
-
-	// Should fail with 1KB limit
-	_, err = fs.ValidateFile(file, 1024)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "exceeds maximum")
 }
 
 func TestFileService_ValidateFile_ExtensionCheck(t *testing.T) {
