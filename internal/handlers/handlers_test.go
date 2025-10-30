@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"strings"
 	"testing"
 
 	"csv-validator/internal/config"
@@ -64,7 +65,7 @@ func TestUpload(t *testing.T) {
 
 	gin.SetMode(gin.TestMode)
 
-	csvData := "name,email\nJohn,john@test.com"
+	csvData := "name,email\nJohn,Chirag@test.com"
 	req := createRequest(t, "test.csv", csvData)
 
 	w := httptest.NewRecorder()
@@ -110,4 +111,97 @@ func TestDownloadInvalidID(t *testing.T) {
 	handler.DownloadFile(c)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestUploadInvalidFileType(t *testing.T) {
+	handler, tempDir := setupHandler(t)
+	defer os.RemoveAll(tempDir)
+
+	gin.SetMode(gin.TestMode)
+
+	// Try uploading a .txt file
+	req := createRequest(t, "test.txt", "not a csv")
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+
+	handler.UploadFile(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "Invalid file type")
+}
+
+func TestUploadFileTooLarge(t *testing.T) {
+	handler, tempDir := setupHandler(t)
+	defer os.RemoveAll(tempDir)
+
+	gin.SetMode(gin.TestMode)
+
+	// Create large content
+	largeData := strings.Repeat("a", 2*1024*1024) // 2MB
+	req := createRequest(t, "large.csv", largeData)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+
+	handler.UploadFile(c)
+
+	assert.Equal(t, http.StatusRequestEntityTooLarge, w.Code)
+}
+
+func TestDownloadJobNotFound(t *testing.T) {
+	handler, tempDir := setupHandler(t)
+	defer os.RemoveAll(tempDir)
+
+	gin.SetMode(gin.TestMode)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Params = []gin.Param{{Key: "id", Value: "a225eb00-0907-4273-92ca-5faadeefae5f"}}
+
+	handler.DownloadFile(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "Job not found")
+}
+
+func TestDownloadJobStillProcessing(t *testing.T) {
+	handler, tempDir := setupHandler(t)
+	defer os.RemoveAll(tempDir)
+
+	gin.SetMode(gin.TestMode)
+
+	// Create a job manually
+	job := handler.jobService.CreateJob("test.csv")
+	handler.jobService.UpdateJobStatus(job.ID, models.JobStatusProcessing)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Params = []gin.Param{{Key: "id", Value: job.ID}}
+
+	handler.DownloadFile(c)
+
+	assert.Equal(t, http.StatusLocked, w.Code)
+	assert.Contains(t, w.Body.String(), "Still processing")
+}
+
+func TestDownloadJobFailed(t *testing.T) {
+	handler, tempDir := setupHandler(t)
+	defer os.RemoveAll(tempDir)
+
+	gin.SetMode(gin.TestMode)
+
+	job := handler.jobService.CreateJob("test.csv")
+	handler.jobService.UpdateJobError(job.ID, "something broke")
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Params = []gin.Param{{Key: "id", Value: job.ID}}
+
+	handler.DownloadFile(c)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "Processing failed")
 }

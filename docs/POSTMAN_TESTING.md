@@ -48,7 +48,7 @@
 ### **Processed CSV Output**
 ```csv
 name,email,phone,has_email
-John,john@email.com,123-456-7890,true
+Chirag,Chirag@email.com,123-456-7890,true
 Jane,,987-654-3210,false
 Bob,invalid-email,555-0123,false
 ```

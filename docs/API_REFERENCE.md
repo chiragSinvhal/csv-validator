@@ -133,14 +133,14 @@ A new column `has_email` is added to each row:
 Input:
 ```csv
 name,email,age
-John,john@example.com,30
+Chirag,Chirag@example.com,30
 Jane,invalid-email,25
 ```
 
 Output:
 ```csv
 name,email,age,has_email
-John,john@example.com,30,true
+Chirag,Chirag@example.com,30,true
 Jane,invalid-email,25,false
 ```
 
